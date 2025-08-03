@@ -38,7 +38,7 @@ CyberGuard adalah tool pentest khusus untuk WordPress yang dirancang dengan keku
 1. **Clone repository:**
 
 ```bash
-git clone https://github.com/username/CyberGuard.git
+git clone https://github.com/r00tH3x/CyberGuard.git
 cd CyberGuard
 ```
 
