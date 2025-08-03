@@ -1,0 +1,6 @@
+requests
+colorama
+beautifulsoup4
+tqdm
+ratelimit
+reportlab
