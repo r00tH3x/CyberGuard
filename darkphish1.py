@@ -778,7 +778,7 @@ class AdvancedWordlistGenerator:
         passwords.extend([
             user, user.capitalize(), user.upper(),
             user + '123', user + '2023', user + '2024', user + '2025',
-            user + '!', user + '@', user + '#', user + ',
+            user + '!', user + '@', user + '#', user + ',',
             '123' + user, user + 'pass', user + 'password',
             'password' + user, user + '01', user + '001'
         ])
@@ -788,7 +788,7 @@ class AdvancedWordlistGenerator:
         
         # Common patterns
         years = ['2020', '2021', '2022', '2023', '2024', '2025']
-        symbols = ['!', '@', '#', ', '%', '&', '*']
+        symbols = ['!', '@', '#', ',', '%', '&', '*']
         
         for year in years:
             passwords.extend([user + year, year + user])
