@@ -55,6 +55,7 @@ import nmap
 import shodan
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
+from datetime import datetime, timedelta, timezone
 import OpenSSL
 
 # Disable SSL warnings
@@ -97,6 +98,17 @@ class Vulnerability:
     cve: Optional[str] = None
     exploit_available: bool = False
     references: List[str] = field(default_factory=list)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert Vulnerability object to dictionary for JSON serialization"""
+        return {
+            'name': self.name,
+            'severity': self.severity,
+            'description': self.description,
+            'cve': self.cve,
+            'exploit_available': self.exploit_available,
+            'references': self.references
+        }
 
 @dataclass
 class Target:
@@ -163,13 +175,13 @@ class AdvancedBanner:
 ║  {Fore.YELLOW}  ██       ██  ██  ██   ██ ██      ██   ██ ██       ██    ██ ██   ██ {Fore.CYAN}║  
 ║  {Fore.RED}  ██        ████   ██████  █████   ██████  ██   ███ ██    ██ ███████ {Fore.CYAN}║
 ║  {Fore.YELLOW}  ██         ██    ██   ██ ██      ██   ██ ██    ██ ██    ██ ██   ██ {Fore.CYAN}║
-║  {Fore.RED}   ██████     ██    ██████  ███████ ██   ██  ██████   ██████  ██   ██ {Fore.CYAN}║
+║  {Fore.RED}  ██████     ██    ██████  ███████ ██   ██  ██████   ██████  ██   ██ {Fore.CYAN}║
 ║                                                                       ║
 ║  {Fore.GREEN}                    CyberGuard v10.0 Enhanced Pro                    {Fore.CYAN}║
-║  {Fore.MAGENTA}            Advanced WordPress Security & Penetration Suite        {Fore.CYAN}║
+║  {Fore.MAGENTA}            Advanced WordPress Security & Penetration Suite          {Fore.CYAN}║
 ║                                                                       ║
-║  {Fore.YELLOW}Created by: Enhanced AI System | Original by: Ibar                  {Fore.CYAN}║
-║  {Fore.GREEN}New Features: AI-Powered Analysis, Advanced Fuzzing, Multi-Vector   {Fore.CYAN}║
+║  {Fore.YELLOW}Created by: Enhanced AI System | Original by: Ibar                   {Fore.CYAN}║
+║  {Fore.GREEN}New Features: AI-Powered Analysis, Advanced Fuzzing, Multi-Vector    {Fore.CYAN}║
 ║  {Fore.RED}Warning: Professional Tool - Use Responsibly & Legally Only          {Fore.CYAN}║
 ╚═══════════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}
 """
@@ -327,15 +339,15 @@ class NetworkRecon:
             cert = x509.load_pem_x509_certificate(cert_pem.encode(), default_backend())
             
             ssl_info = {
-                'subject': str(cert.subject),
-                'issuer': str(cert.issuer),
-                'version': cert.version.name,
-                'serial_number': str(cert.serial_number),
-                'not_valid_before': cert.not_valid_before.isoformat(),
-                'not_valid_after': cert.not_valid_after.isoformat(),
-                'expired': datetime.now() > cert.not_valid_after,
-                'days_until_expiry': (cert.not_valid_after - datetime.now()).days,
-                'signature_algorithm': cert.signature_algorithm_oid._name,
+                 'subject': str(cert.subject),
+                 'issuer': str(cert.issuer),
+                 'version': cert.version.name,
+                 'serial_number': str(cert.serial_number),
+                 'not_valid_before': cert.not_valid_before_utc.isoformat(),
+                 'not_valid_after': cert.not_valid_after_utc.isoformat(),
+                 'expired': datetime.now(timezone.utc) > cert.not_valid_after_utc,
+                 'days_until_expiry': (cert.not_valid_after_utc - datetime.now(timezone.utc)).days,
+                 'signature_algorithm': cert.signature_algorithm_oid._name,
             }
             
             # Extract SANs
@@ -2625,53 +2637,64 @@ class AdvancedReportGenerator:
         
         with open(output_file, 'w', encoding='utf-8') as f:
             f.write(html_content)
-    
-    def _generate_json_report(self, scan_results: Dict[str, Any], 
-                            vulnerabilities: List[Vulnerability],
-                            fuzzing_results: List[Dict[str, Any]],
-                            successful_logins: List[Dict[str, str]], 
-                            output_file: Path):
-        """Generate machine-readable JSON report"""
-        
-        # Convert vulnerabilities to dict format
-        vuln_dicts = []
-        for vuln in vulnerabilities:
-            vuln_dicts.append({
-                'name': vuln.name,
-                'severity': vuln.severity,
-                'description': vuln.description,
-                'cve': vuln.cve,
-                'exploit_available': vuln.exploit_available,
-                'references': vuln.references
-            })
-        
-        report_data = {
-            'metadata': {
-                'tool': 'CyberGuard v10.0 Enhanced Pro',
-                'generated': datetime.now().isoformat(),
-                'target': scan_results.get('url', 'Unknown'),
-                'scan_duration': scan_results.get('scan_duration', 'Unknown')
-            },
+            
+    def _generate_json_report(self, scan_results: Dict[str, Any],
+                          vulnerabilities: List[Vulnerability],
+                          fuzzing_results: List[Dict[str, Any]],
+                          successful_logins: List[Dict[str, str]],
+                          output_file: Path):
+       """Generate machine-readable JSON report"""
+       import copy  # Import copy jika belum ada
+
+       # Convert vulnerabilities to dict format
+       vuln_dicts = []
+       for vuln in vulnerabilities:
+          vuln_dicts.append({
+             'name': vuln.name,
+             'severity': vuln.severity,
+             'description': vuln.description,
+             'cve': vuln.cve,
+             'exploit_available': vuln.exploit_available,
+             'references': vuln.references
+          })
+
+       # Buat deep copy dari scan_results untuk menghindari modifikasi data asli
+       scan_results_copy = copy.deepcopy(scan_results)
+
+       # Konversi vulnerabilities di dalam scan_results_copy jika ada
+       if 'vulnerabilities' in scan_results_copy and isinstance(scan_results_copy['vulnerabilities'], list):
+          scan_results_copy['vulnerabilities'] = [
+              vuln.to_dict() if isinstance(vuln, Vulnerability) else vuln
+              for vuln in scan_results_copy['vulnerabilities']
+          ]
+
+       # Sekarang buat report_data dengan scan_results_copy yang sudah aman
+       report_data = {
+           'metadata': {
+               'tool': 'CyberGuard v10.0 Enhanced Pro',
+               'generated': datetime.now().isoformat(),
+               'target': scan_results.get('url', 'Unknown'),
+               'scan_duration': scan_results.get('scan_duration', 'Unknown')
+           },
             'summary': {
-                'total_vulnerabilities': len(vulnerabilities),
-                'critical_vulnerabilities': len([v for v in vulnerabilities if v.severity == 'critical']),
-                'high_vulnerabilities': len([v for v in vulnerabilities if v.severity == 'high']),
-                'medium_vulnerabilities': len([v for v in vulnerabilities if v.severity == 'medium']),
-                'low_vulnerabilities': len([v for v in vulnerabilities if v.severity == 'low']),
-                'successful_logins': len(successful_logins),
-                'fuzzing_anomalies': len(fuzzing_results),
-                'risk_score': self._calculate_risk_score(vulnerabilities, successful_logins),
-                'risk_level': self._get_risk_level(self._calculate_risk_score(vulnerabilities, successful_logins))
-            },
-            'target_info': scan_results,
+                  'total_vulnerabilities': len(vulnerabilities),
+                  'critical_vulnerabilities': len([v for v in vulnerabilities if v.severity == 'critical']),
+                  'high_vulnerabilities': len([v for v in vulnerabilities if v.severity == 'high']),
+                  'medium_vulnerabilities': len([v for v in vulnerabilities if v.severity == 'medium']),
+                  'low_vulnerabilities': len([v for v in vulnerabilities if v.severity == 'low']),
+                  'successful_logins': len(successful_logins),
+                  'fuzzing_anomalies': len(fuzzing_results),
+                  'risk_score': self._calculate_risk_score(vulnerabilities, successful_logins),
+                  'risk_level': self._get_risk_level(self._calculate_risk_score(vulnerabilities, successful_logins))
+           },
+            'target_info': scan_results_copy,  # Gunakan copy yang sudah dikonversi
             'vulnerabilities': vuln_dicts,
             'successful_logins': successful_logins,
             'fuzzing_results': fuzzing_results,
             'recommendations': self._get_recommendations(vulnerabilities, successful_logins, scan_results)
-        }
-        
-        with open(output_file, 'w', encoding='utf-8') as f:
-            json.dump(report_data, f, indent=2, ensure_ascii=False)
+       }
+       with open(output_file, 'w', encoding='utf-8') as f:
+             json.dump(report_data, f, indent=2, ensure_ascii=False)
     
     def _generate_csv_report(self, vulnerabilities: List[Vulnerability], output_file: Path):
         """Generate CSV report for vulnerability tracking"""
