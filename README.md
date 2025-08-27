@@ -62,12 +62,12 @@ pip install requests colorama beautifulsoup4 tqdm ratelimit reportlab tabulate
 
 ### Scan 1 Target
 ```bash
-python CyberGuard1.py https://targetwordpress.com
+python CyberGuard.py https://targetwordpress.com
 ```
 
 ### Scan Banyak Target (dari file)
 ```bash
-python CyberGuard1.py targets.txt
+python CyberGuard.py targets.txt
 ```
 Format `targets.txt`:
 ```
@@ -77,13 +77,13 @@ https://site2.com
 
 ### Custom Wordlist & Fuzz Payload
 ```bash
-python CyberGuard1.py https://target.com wordlist.txt fuzz_payloads.txt
+python CyberGuard.py https://target.com wordlist.txt fuzz_payloads.txt
 ```
 
 ### Dengan API Token (Opsional)
 Gunakan WPScan API atau API eksternal lainnya untuk hasil lebih akurat:
 ```bash
-python CyberGuard1.py https://target.com wordlist.txt fuzz.txt your_wpscan_api_token
+python CyberGuard.py https://target.com wordlist.txt fuzz.txt your_wpscan_api_token
 ```
 
 ---
